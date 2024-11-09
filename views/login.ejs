@@ -1,0 +1,18 @@
+<%- include('partials/header') %>
+<form class="d-flex flex-column align-items-center mt-3" action="/login" method="post">
+    <img class="logo-image mx-auto" src="/public/img/todo-list-logo.png" alt="Todo List Logo"/>
+    <h2 class="mx-auto mt-2">Simple Todo List</h2>
+    <div class="w-50 mt-3">
+        <label for="inputEmail" class="form-label">E-mail</label>
+        <input id="inputEmail" type="email" class="form-control" name="email" aria-describedby="emailHelp">
+    </div>
+    <div class="w-50 mt-3">
+        <label for="inputPassword" class="form-label">Senha</label>
+        <input id="inputPassword" type="password" class="form-control" name="password">
+    </div>
+    <div class="w-50 mt-3">
+        <a class="link-opacity-50-hover" href="/register">Registrar</a>
+        <button type="submit" class="btn btn-primary w-100 mt-3">Entrar</button>
+    </div>
+</form>
+<%- include('partials/footer') %>
