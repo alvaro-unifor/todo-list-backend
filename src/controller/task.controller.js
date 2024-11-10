@@ -1,116 +1,87 @@
-import Task from '../database/model/task.model.js'
+import Task from '../database/model/task.model.js';
 
 class TaskController {
+  renderNewForm(req, res) {
+    res.render("task_form", { isUpdate: false });
+  }
 
-renderNewForm(req, res){
-  res.render("task_form", {isUpdate: false });
-}
-
- async renderEditForm(req, res) {
-  const id = req.params.id;
-  const task = await Task.findByPk(id);
-  res.render("task_form", { isUpdate: true, task });
-  
- }
+  async renderEditForm(req, res) {
+    const id = req.params.id;
+    try {
+      const task = await Task.findByPk(id);
+      if (!task) return res.status(404).json({ message: "Task não encontrada" });
+      res.render("task_form", { isUpdate: true, task });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Erro ao carregar o formulário de edição" });
+    }
+  }
 
   async createTask(req, res) {
-    const name = req.body.name
-    const description = req.body.description
-    const isFinished = req.body.isFinished ? true : false
-    try {
-      await Task.create({name, description, isFinished})
-      return res.status(201).json({
-        message:"negocio criado com sucesso"
-      })
-    } catch (e){
-      console.error(e);
-      res.status(400).json({
-        erro:"Deu erro"
-      })
+    const { name, description, isFinished } = req.body;
+    if (!name || !description) {
+      return res.status(400).json({ error: "Nome e descrição são obrigatórios" });
     }
-    res.redirect("/tasks");
+    try {
+      const task = await Task.create({ name, description, isFinished: !!isFinished });
+      return res.status(201).json({ message: "Tarefa criada com sucesso", task });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Erro ao criar a tarefa" });
+    }
   }
 
   async updateTask(req, res) {
-    const id = req.body.id
-    const name = req.body.name
-    const description = req.body.description
-    const isFinished = req.body.isFinished ? true : false
-    try {
-      await Task.update({name, description, isFinished}, { where: { id } })
-      return res.status(201).json({
-        message:"negocio criado com sucesso"
-      })
-    } catch (e){
-      console.error(e);
-      res.status(400).json({
-        erro:"Deu erro"
-      })
+    const { id, name, description, isFinished } = req.body;
+    if (!name || !description) {
+      return res.status(400).json({ error: "Nome e descrição são obrigatórios" });
     }
+    try {
+      const [updated] = await Task.update(
+        { name, description, isFinished: !!isFinished },
+        { where: { id } }
+      );
+      if (!updated) return res.status(404).json({ message: "Tarefa não encontrada" });
+      return res.status(200).json({ message: "Tarefa atualizada com sucesso" });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Erro ao atualizar a tarefa" });
+    }
+  }
 
-    res.redirect("/tasks");
+  async deleteTask(req, res) {
+    const { id } = req.params;
+    try {
+      const deleted = await Task.destroy({ where: { id } });
+      if (!deleted) return res.status(404).json({ message: "Tarefa não encontrada" });
+      return res.status(200).json({ message: "Excluída com sucesso" });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Erro ao excluir a tarefa" });
+    }
   }
 
   async listTasks(req, res) {
     try {
-      const tasks = await Task.findAll()
-      return res.status(200).json({
-        message:"negocio criado com sucesso",
-        data:tasks
-      })
-    } catch(e) {
+      const tasks = await Task.findAll();
+      return res.status(200).json(tasks);
+    } catch (e) {
       console.error(e);
-      res.status(400).json({
-        erro:"Deu erro"
-      })
+      res.status(500).json({ error: "Erro ao listar as tarefas" });
     }
-    res.render("task_list", { tasks });
-  }
-
-  async deleteTask(req, res) {
-    const {id} = req.params;
-    try {
-      const task = await Task.findByPk(id);
-      if(!task) {
-        return res.status(400).json({
-          message:"Taks não existe",
-        })
-      }
-      await Task.destroy({ where: { id } })
-      return res.status(200).json({
-        message:"Excluido com sucesso",
-      })
-    } catch(e) {
-      console.error(e);
-      res.status(400).json({
-        erro:"Deu erro"
-      })
-    }
-    res.render("task_list", { tasks });
   }
 
   async findTaskById(req, res) {
-    const id = req.params.id;
+    const { id } = req.params;
     try {
       const task = await Task.findByPk(id);
-      if(!task) {
-        return res.status(400).json({
-          message:"Taks não existe",
-        })
-      }
-      return res.status(200).json({
-        message:"negocio criado com sucesso",
-        "data":task
-      })
-    } catch (e){
+      if (!task) return res.status(404).json({ message: "Tarefa não encontrada" });
+      return res.status(200).json(task);
+    } catch (e) {
       console.error(e);
-      res.status(400).json({
-        erro:"Deu erro"
-      })
+      res.status(500).json({ error: "Erro ao buscar a tarefa" });
     }
-    res.redirect("/tasks");
   }
-
 }
 
 export default TaskController;
